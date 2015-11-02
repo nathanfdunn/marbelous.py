@@ -133,7 +133,7 @@ class Board:
     def write_stdout(self,stdout_str):
         # print "write_stdout", self
         if stdout_str:
-            if options['verbose'] > 0:
+            if options['verbose'] > 0 or options['watch']:
                 self.print_out += stdout_str
             if options['verbose'] > 1:
                 self.printr("write_stdout STDOUT: " + ' '.join(["0x" + hex(ord(char))[2:].upper().zfill(2) + \
@@ -528,9 +528,7 @@ class Board:
     def display_frame(self):
         time.sleep(.5)
         self.printr( '\n'*70 )
-        string_rep = self.to_string()
-        self.printr( string_rep )
-        return string_rep
+        self.printr( self.to_string() )
 
 
 
@@ -612,11 +610,10 @@ previous_iteration = ""
 while board.tick():# and board.tick_count < 10000:
     processed_boards = []
     total_ticks += 1
-    if options['verbose'] > 2 and not options['watch']:            
+    if options['verbose'] > 2:         
         board.display_tick()
     if options['watch']:
         board.display_frame()
-
 
 
 if options['verbose'] > 1:
@@ -626,6 +623,8 @@ if options['verbose'] > 0:
     board.printr("Combined STDOUT: " + ' '.join(["0x" + hex(ord(v))[2:].upper().zfill(2) + \
                 '/"' + (v if ord(v) > 31 else '?') + '"' \
                 for v in board.print_out]))
+if options['watch']:
+    board.printr("Final STDOUT:\n\n"+board.print_out)
 
 outputs = board.get_output_values()
 if options['verbose'] > 0:
