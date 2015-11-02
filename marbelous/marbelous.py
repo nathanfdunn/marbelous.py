@@ -12,6 +12,7 @@ try:
 except ImportError:
     from queue import Queue, Empty  # python 3.x
 
+import time     # for pausing momentarily between frames with watch mode
 
 
 oct_digits = '01234567'
@@ -32,6 +33,11 @@ parser.add_argument('--stderr', dest='stderr', action='store_true',
                     help='send verbose output to stderr instead of stdout')
 parser.add_argument('-m', metavar='W', dest='memoize_width', action='store', type=int, default=2,
                     help='maximum function width to memoize')
+
+#TODO add argument specifying speed
+parser.add_argument('-w', '-watch', dest='watch', action='store_true',
+                    help='watch the execution of the program' \
+                                ' (requires that there is no verbosity)')
 
 options = vars(parser.parse_args())
 
@@ -502,6 +508,37 @@ class Board:
         self.marbles = nmb
         return True
 
+
+    def to_string(self):
+        out = ""
+
+        if self.function_queue:
+            board, coordinates = self.function_queue[0]
+            out += board.to_string()
+
+        out += ':' + self.name + " tick " + str(self.tick_count) + '\n'
+        for y in range(self.board_h):
+            line = ''
+            for x in range(self.board_w):
+                line += (format_cell(self.marbles[y][x]) if self.marbles[y][x] is not None else format_cell(self.devices[y][x])) + ' '
+            out += line + '\n'
+        return out +'\n'
+
+
+    def display_frame(self):
+        time.sleep(.5)
+        self.printr( '\n'*70 )
+        string_rep = self.to_string()
+        self.printr( string_rep )
+        return string_rep
+
+
+
+
+
+
+
+
 # the boards array contains pristine instances of boards from the source
 boards = {}
 files_included = set()
@@ -564,10 +601,23 @@ if options['verbose'] > 2:
     board.display_tick()
 
 total_ticks = 1
+
+
+# display the initial state
+if options['watch']:
+    board.display_frame()
+
+previous_iteration = ""
+
 while board.tick():# and board.tick_count < 10000:
+    processed_boards = []
     total_ticks += 1
-    if options['verbose'] > 2:
+    if options['verbose'] > 2 and not options['watch']:            
         board.display_tick()
+    if options['watch']:
+        board.display_frame()
+
+
 
 if options['verbose'] > 1:
     board.printr("Total ticks across all boards: " + str(total_ticks))
@@ -596,3 +646,9 @@ if options['return']:
         exit(exit_code)
 
 print
+
+
+
+
+
+
